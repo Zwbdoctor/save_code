@@ -1,0 +1,3 @@
+classname = ant-transfer-checkbox-inner         # 选择条数
+addto_right = anticon anticon-right              # 加入右边
+link_text = '查看报表'
