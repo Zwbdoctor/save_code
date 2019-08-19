@@ -1,6 +1,7 @@
 # from pexpect import spawn, EOF
 import paramiko
 import pexpect
+import scp
 import os
 import logging
 from logging.handlers import TimedRotatingFileHandler
@@ -117,13 +118,14 @@ class RemoteShell:
 
     def upload(self, local_path, target_path, isdir=False):
         # 连接，上传
-        sftp = paramiko.SFTPClient.from_transport(self.__transport)
-        # 将location.py 上传至服务器 /tmp/test.py
-        sftp.put(local_path, target_path, isdir=isdir, confirm=True)
-        # print(os.stat(local_path).st_mode)
-        # 增加权限
-        # sftp.chmod(target_path, os.stat(local_path).st_mode)
-        # sftp.chmod(target_path, 0o755)  # 注意这里的权限是八进制的，八进制需要使用0o作为前缀
+        # sftp = paramiko.SFTPClient.from_transport(self.__transport)
+        with scp.SCPClient(self.__transport) as sftp:
+            # 将location.py 上传至服务器 /tmp/test.py
+            sftp.put(local_path, target_path, recursive=isdir)
+            # print(os.stat(local_path).st_mode)
+            # 增加权限
+            # sftp.chmod(target_path, os.stat(local_path).st_mode)
+            # sftp.chmod(target_path, 0o755)  # 注意这里的权限是八进制的，八进制需要使用0o作为前缀
 
     def download(self, target_path, local_path):
         # 连接，下载
