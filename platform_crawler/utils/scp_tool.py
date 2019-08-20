@@ -79,9 +79,6 @@ class RemoteShell:
         transport.connect(username=self.username, password=self.pwd)
         return transport
 
-    def close(self):
-        self.__transport.close()
-
     def run_cmd(self, command):
         """
          执行shell命令,返回字典
@@ -119,6 +116,8 @@ class RemoteShell:
             return True
         except:
             return False
+        finally:
+            self.__transport.close()
 
     def download(self, target_path, local_path):
         # 连接，下载
@@ -137,10 +136,6 @@ class RemoteShell:
         else:
             value = bytes_or_str
         return value
-
-    # 销毁
-    def __del__(self):
-        self.close()
 
 
 def init_dst_dir(platform, isCpa=False):
@@ -182,7 +177,7 @@ def upload_file(dir_path, platform, isCpa=False):
         #     f.write('{"msg": "no data"}')
         return True
     t = RemoteShell()
-    t2 = RemoteShell(host='47.100.120.11')          # test env
+    t2 = RemoteShell(host='47.100.120.114')          # test env
     res = put(t, t2, dir_path, dst_path)
     if not res:
         logger.error(f'Upload failed with the path: {dst_path}')

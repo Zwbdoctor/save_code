@@ -85,14 +85,14 @@ class WifiSpider(TaskProcess):
             # 数据
             data_res = self.get_data(sd, ed, data_name)
             if not data_res.get('succ'):
-                self.login_obj.close_chrome_debugger(delete_user_data=True)
+                self.login_obj.close_chrome_debugger()
                 return {'succ': False}
             if data_res.get('msg') != 'no data':
                 logger.info(f'date_range: {sd}~{ed} | no data')
                 data_list.append(1)
         if not data_list:
             self.result_kwargs['has_data'] = 0
-            self.login_obj.close_chrome_debugger(delete_user_data=True)
+            self.login_obj.close_chrome_debugger()
 
     def get_img_part(self, get_data_res=None, **kwargs):
         # 图片
@@ -100,7 +100,7 @@ class WifiSpider(TaskProcess):
         mths, dates = u.make_dates(ys=ys, ms=ms, ye=ye, me=me)
         for sd, ed in dates:
             self.get_img(sd, ed)
-        self.login_obj.close_chrome_debugger(delete_user_data=True)
+        self.login_obj.close_chrome_debugger()
         return {'succ': True}
 
     def get_data(self, start, end, data_name):

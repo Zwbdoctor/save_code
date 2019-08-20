@@ -37,8 +37,12 @@ class Base:
         self.d = webdriver.Chrome(options=co)
         self.d.set_page_load_timeout(60)
         self.d.set_script_timeout(30)
-        self.d.delete_all_cookies()
         return self.d
+
+    def delete_all_cookies(self):
+        data_dir = [self.base_chrome_data_dir, self.base_profile_name, 'Default', 'Cookies']
+        data_dir_str = os.path.realpath(join(*data_dir))
+        os.system(f'rd /S /Q {data_dir_str}')
 
     def build_chrome_params(self, profile_name, debugger_port):
         # dirs
@@ -61,6 +65,7 @@ class Base:
         proxy_server = f'--proxy-server={proxy_server}'
         if use_proxy:
             chrome_params.append(proxy_server)
+        self.delete_all_cookies()
         self.debug_chrome = Popen(chrome_params, stdout=subprocess.PIPE)
         time.sleep(1)
         u.pag.hotkey('winleft', 'up', interval=0.3)
@@ -74,8 +79,9 @@ class Base:
             pass
         if delete_user_data:
             time.sleep(1)
-            data_dir = os.path.realpath(join(self.base_chrome_data_dir, self.base_profile_name))
-            os.system(f'rd /S /Q {data_dir}')
+            data_dir = [self.base_chrome_data_dir, self.base_profile_name]
+            data_dir_str = os.path.realpath(join(*data_dir))
+            os.system(f'rd /S /Q {data_dir_str}')
 
     def open_proc(self):
         subprocess.Popen([ExecutePaths.ChromePath])
