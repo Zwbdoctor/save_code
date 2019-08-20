@@ -42,7 +42,7 @@ class Base:
     def delete_all_cookies(self):
         data_dir = [self.base_chrome_data_dir, self.base_profile_name, 'Default', 'Cookies']
         data_dir_str = os.path.realpath(join(*data_dir))
-        os.system(f'rd /S /Q {data_dir_str}')
+        os.system(f'del /Q {data_dir_str}')
 
     def build_chrome_params(self, profile_name, debugger_port):
         # dirs

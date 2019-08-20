@@ -107,12 +107,7 @@ class RemoteShell:
         # sftp = paramiko.SFTPClient.from_transport(self.__transport)
         try:
             with scp.SCPClient(self.__transport) as sftp:
-                # 将location.py 上传至服务器 /tmp/test.py
                 sftp.put(local_path, target_path, recursive=isdir)
-                # print(os.stat(local_path).st_mode)
-                # 增加权限
-                # sftp.chmod(target_path, os.stat(local_path).st_mode)
-                # sftp.chmod(target_path, 0o755)  # 注意这里的权限是八进制的，八进制需要使用0o作为前缀
             return True
         except:
             return False
@@ -149,9 +144,10 @@ def init_dst_dir(platform, isCpa=False):
     t = RemoteShell()
     test_host = '47.100.120.114'
     t2 = RemoteShell(host=test_host)
-    if not t2.upload(os.path.join(BASEDIR, 'init_dir'), dst_path, isdir=True):
+    local_path = os.path.join(BASEDIR, 'init_dir')
+    if not t2.upload(local_path, dst_path, isdir=True):
         logger.error("init dst dir failed with test env")
-    if not t.upload(os.path.join(BASEDIR, 'init_dir'), dst_path, isdir=True):
+    if not t.upload(local_path, dst_path, isdir=True):
         logger.error("init dst dir failed with real env")
     del(t, t2)
     logger.info(f'PLATFORM:{platform} | LOCAL_PATH:./init_dir | DST_PATH:{dst_path}')
