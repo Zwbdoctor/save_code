@@ -97,12 +97,11 @@ class WifiKey(Base):
 
     def login_(self, vc_times=1, pwd_times=1, refresh_times=0):
         url = 'http://ad.wkanx.com/#/user/login'
+        self.d.get(url)
         try:
-            self.d.get(url)
+            self.d.find_element_by_link_text('退出').click()
         except:
             pass
-        if refresh_times > 0:
-            self.d.refresh()
         self.d.implicitly_wait(3)
         try:    # 第一次get页面刷新失败
             self.d.find_element_by_css_selector('.sems-login-form')
@@ -111,10 +110,6 @@ class WifiKey(Base):
             if refresh_times == 10:
                 return {'succ': False, 'msg': 'login page got failed, please check the login page'}
             return self.login_(vc_times=vc_times, pwd_times=pwd_times, refresh_times=refresh_times)
-        try:
-            self.d.find_element_by_link_text('退出').click()
-        except:
-            pass
         try:
             self.d.find_element_by_name('email').send_keys(self.acc)
             self.d.find_element_by_name('password').send_keys(self.pwd)
