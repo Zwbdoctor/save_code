@@ -51,7 +51,7 @@ class Base:
         if debugger_port != 9222:
             self.debugger_port = debugger_port
         chrome_params = [ExecutePaths.ChromePath, f'--remote-debugging-port={self.debugger_port}',
-                         f'--user-data-dir={data_dir}', '--disable-password-generation'
+                         f'--user-data-dir={data_dir}', '--disable-password-generation',
                          '--disable-suggestions-ui']
         return chrome_params
 
@@ -73,8 +73,9 @@ class Base:
         except:
             pass
         if delete_user_data:
-            data_dir = join(self.base_chrome_data_dir, self.base_profile_name)
-            os.system(f'rm -rf {data_dir}')
+            time.sleep(1)
+            data_dir = os.path.realpath(join(self.base_chrome_data_dir, self.base_profile_name))
+            os.system(f'rd /S /Q {data_dir}')
 
     def open_proc(self):
         subprocess.Popen([ExecutePaths.ChromePath])
