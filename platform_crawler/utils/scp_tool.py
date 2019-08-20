@@ -4,23 +4,12 @@ import pexpect
 import scp
 import os
 import logging
-from logging.handlers import TimedRotatingFileHandler
 from time import strftime
 
-from platform_crawler.settings import LOGPATH, BASEDIR
+from platform_crawler.settings import BASEDIR, GlobalVal
 
 
-base_dir = os.path.join(LOGPATH, 'upload')
-if not os.path.exists(base_dir):
-    os.makedirs(base_dir)
-filename = os.path.join(base_dir, 'upload.log')
-logger = logging.getLogger('upload_model')
-if not logger.handlers:
-    formater = logging.Formatter("%(levelname)s - %(asctime)s - %(filename)s[line:%(lineno)d]: %(message)s")
-    tf_handler = TimedRotatingFileHandler(filename=filename, when='midnight', interval=1, backupCount=3, encoding='utf-8')
-    tf_handler.setLevel(logging.DEBUG)
-    tf_handler.setFormatter(formater)
-    logger.addHandler(tf_handler)
+logger = None
 
 
 class TransferWithExpect:
@@ -119,13 +108,17 @@ class RemoteShell:
     def upload(self, local_path, target_path, isdir=False):
         # 连接，上传
         # sftp = paramiko.SFTPClient.from_transport(self.__transport)
-        with scp.SCPClient(self.__transport) as sftp:
-            # 将location.py 上传至服务器 /tmp/test.py
-            sftp.put(local_path, target_path, recursive=isdir)
-            # print(os.stat(local_path).st_mode)
-            # 增加权限
-            # sftp.chmod(target_path, os.stat(local_path).st_mode)
-            # sftp.chmod(target_path, 0o755)  # 注意这里的权限是八进制的，八进制需要使用0o作为前缀
+        try:
+            with scp.SCPClient(self.__transport) as sftp:
+                # 将location.py 上传至服务器 /tmp/test.py
+                sftp.put(local_path, target_path, recursive=isdir)
+                # print(os.stat(local_path).st_mode)
+                # 增加权限
+                # sftp.chmod(target_path, os.stat(local_path).st_mode)
+                # sftp.chmod(target_path, 0o755)  # 注意这里的权限是八进制的，八进制需要使用0o作为前缀
+            return True
+        except:
+            return False
 
     def download(self, target_path, local_path):
         # 连接，下载
@@ -151,6 +144,8 @@ class RemoteShell:
 
 
 def init_dst_dir(platform, isCpa=False):
+    global logger
+    logger = logging.getLogger(GlobalVal.CUR_MAIN_LOG_NAME)
     cudate = strftime('%Y-%m-%d')
     if not isCpa:
         dst_path = '/data/python/%(platform)s/%(currentDay)s/' % {'platform': platform, 'currentDay': cudate}
@@ -159,11 +154,12 @@ def init_dst_dir(platform, isCpa=False):
     t = RemoteShell()
     test_host = '47.100.120.114'
     t2 = RemoteShell(host=test_host)
-    if not t2.upload(os.path.join(BASEDIR, 'init_dir'), dst_path):
+    if not t2.upload(os.path.join(BASEDIR, 'init_dir'), dst_path, isdir=True):
         logger.error("init dst dir failed with test env")
-    if not t.upload(os.path.join(BASEDIR, 'init_dir'), dst_path):
+    if not t.upload(os.path.join(BASEDIR, 'init_dir'), dst_path, isdir=True):
         logger.error("init dst dir failed with real env")
-    logger.warning(f'PLATFORM:{platform} | LOCAL_PATH:./init_dir | DST_PATH:{dst_path}')
+    del(t, t2)
+    logger.info(f'PLATFORM:{platform} | LOCAL_PATH:./init_dir | DST_PATH:{dst_path}')
     return {'succ': True}
 
 
@@ -190,7 +186,7 @@ def upload_file(dir_path, platform, isCpa=False):
     res = put(t, t2, dir_path, dst_path)
     if not res:
         logger.error(f'Upload failed with the path: {dst_path}')
-    logger.warning(f'PLATFORM:{platform} | LOCAL_PATH:{dir_path} | DST_PATH:{dst_path}')
+    logger.info(f'PLATFORM:{platform} | LOCAL_PATH:{dir_path} | DST_PATH:{dst_path}')
     return res
 
 
