@@ -10,7 +10,7 @@ import selenium.webdriver.support.expected_conditions as EC
 
 from platform_crawler.spiders.pylib.base_crawler import BaseCrawler
 from platform_crawler.spiders.pylib.get_pwd import get_pwd
-from platform_crawler.utils.scp_tool import init_dst_dir, upload_file
+from platform_crawler.spiders.pylib.scp_client import init_dst_dir, upload_file
 from platform_crawler.utils.utils import Util
 from platform_crawler import settings
 
@@ -83,7 +83,7 @@ class TaskProcess(BaseCrawler):
         if ui:      # 当self.run 抛出异常，需要重新初始化路径数据
             self.init_paths(ui)
         # 上传
-        if not upload_file(self.dir_path, self.platform, isCpa=self.is_cpa):
+        if not upload_file(self.dir_path, self.platform, is_cpa=self.is_cpa):
             return {'succ': False, 'msg': 'upload failed'}
         return {'succ': True}
 
@@ -199,7 +199,7 @@ class TaskProcess(BaseCrawler):
 
     def init_paths(self, ui):
         """初始化路径数据"""
-        init_dst_dir(self.platform, isCpa=self.is_cpa)
+        init_dst_dir(self.platform, is_cpa=self.is_cpa)
         # 创建文件夹
         cur_time = time.strftime('%Y-%m-%d')
         dir_name = '%(taskId)s_%(cTime)s_%(account)s' % {'taskId': ui['id'],
