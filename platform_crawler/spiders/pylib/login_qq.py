@@ -173,7 +173,7 @@ class LoginQQ:
                 return {'succ': False, 'msg': 'get vc_location failed after 2 times'}
         self.d.implicitly_wait(20)
         time.sleep(2)
-        input('please login qq')
+        # input('please login qq')
         res = self.is_login()
         if not res.get('succ'):
             if not login_cli(self.user_info.get('account'), self.user_info.get('password'), self.u):
@@ -389,11 +389,29 @@ class LoginQQ:
         accounts = data.get('data').get('accounts')
         return {'succ': True, 'msg': accounts}
 
+    def login_by_hand(self):
+        url = 'https://e.qq.com/ads/'
+        self.get(url)
+        self.d.find_element_by_id('loginBtn').click()
+        logger.info('兼容另一版本的登陆界面')
+        # self.d.switch_to.frame('ptlogin_iframe')
+        # self.d.find_element_by_id('switcher_plogin').click()
+        # time.sleep(1)
+        # self.d.find_element_by_id('u').clear()
+        # self.d.find_element_by_id('u').send_keys(self.user_info['account'])
+        # time.sleep(0.5)
+        # self.d.find_element_by_id('p').send_keys(self.user_info['password'])
+        # time.sleep(1)
+        # self.d.find_element_by_id('login_button').click()
+        input('Please login by your own, then press enter to continue')
+        return self.deal_res_after_login()
+
     def run_login(self):
         res = None
         for e in range(1, 6):
             self.d = self.init_driver()
             res = self.login()
+            # res = self.login_by_hand()
             if res['succ']:
                 return res
             elif not res.get('succ'):
@@ -405,12 +423,6 @@ class LoginQQ:
             else:
                 self.d.quit()
         else:
-            # 上报无效
-            # params = [self.user_info.get('id'), self.user_info.get('account'), self.user_info.get('platform'), None,
-            #           False]
-            # if not post_res(*params):
-            #     logger.error('----------useless account! Post result failed!')
-            # else:
             logger.info('useless account!(%s) Post success!' % self.user_info.get('account'))
             self.d.quit()
             return {'succ': False, 'msg': res.get('msg'), 'invalid_account': True}

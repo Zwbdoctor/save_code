@@ -69,11 +69,13 @@ class RemoteShell:
         self.port = port
         self.username = user
         self.pwd = pwd
+        self._sock = None
 
     @property
     def __transport(self):
         transport = paramiko.Transport((self.host, self.port))
         transport.connect(username=self.username, password=self.pwd)
+        self._sock = transport
         return transport
 
     def run_cmd(self, command):
@@ -114,7 +116,8 @@ class RemoteShell:
             return False
         finally:
             sftp.close()
-            self.__transport.close()
+            if self._sock.active:
+                self._sock.close()
 
     def download(self, target_path, local_path):
         # 连接，下载

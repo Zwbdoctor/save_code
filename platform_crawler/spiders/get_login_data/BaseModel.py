@@ -35,7 +35,7 @@ class Base:
         co.add_argument('--ignore-certificate-errors')
         co.add_argument('--disable-password-generation')
         co.add_argument('--disable-suggestions-ui')
-        co.add_argument('--no-sandbox"')
+        # co.add_argument('--no-sandbox"')
         co.debugger_address = f'127.0.0.1:{self.debugger_port}'
         self.d = webdriver.Chrome(options=co)
         self.d.set_page_load_timeout(60)
@@ -59,7 +59,7 @@ class Base:
             self.debugger_port = debugger_port
         chrome_params = [ExecutePaths.ChromePath, f'--remote-debugging-port={self.debugger_port}',
                          f'--user-data-dir={os.path.realpath(data_dir)}', '--disable-password-generation',
-                         '--disable-suggestions-ui', '--no-sandbox']
+                         '--disable-suggestions-ui']  # , '--no-sandbox']
         return chrome_params
 
     def open_remote_debug_chrome(self, profile_name=None, debugger_port=9222, use_proxy=False,

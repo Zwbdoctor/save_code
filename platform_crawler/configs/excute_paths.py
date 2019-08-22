@@ -11,4 +11,4 @@ class ExecutePaths:
 
     ChromeCookiePath = os.environ['LOCALAPPDATA'] + r"\Google\Chrome\User Data\Default\Cookies"
 
-    BaseChromeDataDir = 'C:/selenium'
+    BaseChromeDataDir = r'C:/selenium'

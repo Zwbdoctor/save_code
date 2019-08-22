@@ -206,7 +206,7 @@ def task_filter(data):
     acc = []          # 指定账号
     # acc.extend(['168彩票'])          # 指定账号
     err_account = []
-    pass_platform = ['MEIZUSTORE', 'HUAWEISTORE', 'OPPOSTORE', 'GDT']
+    pass_platform = ['MEIZUSTORE', 'HUAWEISTORE', 'OPPOSTORE']
     today = strftime('%d')
     if int(today) == 3:
         pass_platform.remove('GDT')

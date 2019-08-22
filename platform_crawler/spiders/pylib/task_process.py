@@ -14,7 +14,6 @@ from platform_crawler.spiders.pylib.scp_client import init_dst_dir, upload_file
 from platform_crawler.utils.utils import Util
 from platform_crawler import settings
 
-
 post_res_url = 'http://erp.btomorrow.cn/adminjson/ERP_ReportPythonCrawlerTask'
 u = Util()
 logger = None
@@ -61,7 +60,9 @@ class TaskProcess(BaseCrawler):
 
     def init_browser(self, page_timeout=120, element_timeout=10):
         co = webdriver.ChromeOptions()
-        co.add_argument('disable-infobars')
+        # co.add_argument('--no-sandbox')
+        co.add_argument('--disable-infobars')
+        # co.add_argument('--disable-gpu')
         co.add_argument('--disable-background-networking')
         self.d = webdriver.Chrome(options=co)
         self.d.delete_all_cookies()
@@ -80,7 +81,7 @@ class TaskProcess(BaseCrawler):
         return ele
 
     def upload_file(self, ui=None):
-        if ui:      # 当self.run 抛出异常，需要重新初始化路径数据
+        if ui:  # 当self.run 抛出异常，需要重新初始化路径数据
             self.init_paths(ui)
         # 上传
         if not upload_file(self.dir_path, self.platform, is_cpa=self.is_cpa):
@@ -208,11 +209,11 @@ class TaskProcess(BaseCrawler):
         self.dir_path = settings.join(settings.sd_path, self.platform, cur_time, dir_name)
         os.makedirs(self.dir_path)
 
-        self.err_img_name = settings.join(self.dir_path, 'error_%s_%s.jpg' % (int(time.time()*1000), task_type))
+        self.err_img_name = settings.join(self.dir_path, 'error_%s_%s.jpg' % (int(time.time() * 1000), task_type))
         self.dst_path = '/data/python/%s/%s/%s' % (self.platform, cur_time, dir_name)
         if self.is_cpa:
             self.dst_path = '/data/python/%s/%s/%s/%s' % ('CPA', self.platform, cur_time, dir_name)
-        settings.DST_DIR = self.dst_path        # Add to login class for post res
+        settings.DST_DIR = self.dst_path  # Add to login class for post res
 
     def run(self, ui):
         """for child class to rewrite"""
@@ -222,10 +223,10 @@ class TaskProcess(BaseCrawler):
         # 登陆 && 获取数据/图片
         try:
             res = self.login_and_get_data(ui)
-            if res is not None and not res.get('succ'):         # 正常的报错场景
+            if res is not None and not res.get('succ'):  # 正常的报错场景
                 self.save_screen_shot(self.err_img_name)
         except Exception as er:
-            self.save_screen_shot(self.err_img_name)        # 未知报错场景
+            self.save_screen_shot(self.err_img_name)  # 未知报错场景
             logger.error(er, exc_info=1)
             res = {'succ': False, 'msg': 'got unKnown error'}
 
@@ -276,7 +277,7 @@ class TaskProcess(BaseCrawler):
         except Exception as e:
             logger.warning('Got an err about account %s, detail msg like this:' % ui['account'])
             logger.error(e, exc_info=1)
-            self.save_screen_shot(self.err_img_name)        # 账号无效场景
+            self.save_screen_shot(self.err_img_name)  # 账号无效场景
             self.upload_file(ui=ui)
             self.result_kwargs.update({'has_data': 0, 'has_pic': 0})
             self.post_res(ui['id'], ui['account'], status=5, **self.result_kwargs)
