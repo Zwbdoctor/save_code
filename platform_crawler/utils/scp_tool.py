@@ -1,12 +1,9 @@
-# from pexpect import spawn, EOF
 import paramiko
 import pexpect
 import scp
 import os
-import logging
-from time import strftime
 
-from platform_crawler.settings import BASEDIR, GlobalVal
+from platform_crawler.settings import BASEDIR
 
 
 logger = None
@@ -37,7 +34,7 @@ class TransferWithExpect:
             print(e)
 
      
-class RemoteShellWithExpectScript:
+class UploadWithExpectScript:
 
     def __init__(self, host=None, user=None, pwd=None):
         self.host = '139.224.116.116' if not host else host
@@ -104,14 +101,19 @@ class RemoteShell:
 
     def upload(self, local_path, target_path, isdir=False):
         # 连接，上传
-        # sftp = paramiko.SFTPClient.from_transport(self.__transport)
+        sftp = paramiko.SFTPClient.from_transport(self.__transport)
         try:
-            with scp.SCPClient(self.__transport) as sftp:
-                sftp.put(local_path, target_path, recursive=isdir)
+            with scp.SCPClient(self.__transport) as scp_client:
+                print('正在上传...')
+                scp_client.put(local_path, target_path, recursive=isdir)
+                sftp.chmod(target_path, 0o755)
+                print('上传完毕!')
             return True
-        except:
+        except Exception as e:
+            print(e)
             return False
         finally:
+            sftp.close()
             self.__transport.close()
 
     def download(self, target_path, local_path):
@@ -133,61 +135,14 @@ class RemoteShell:
         return value
 
 
-def init_dst_dir(platform, isCpa=False):
-    global logger
-    logger = logging.getLogger(GlobalVal.CUR_MAIN_LOG_NAME)
-    cudate = strftime('%Y-%m-%d')
-    if not isCpa:
-        dst_path = '/data/python/%(platform)s/%(currentDay)s/' % {'platform': platform, 'currentDay': cudate}
-    else:
-        dst_path = '/data/python/CPA/%(platform)s/%(currentDay)s/' % {'platform': platform, 'currentDay': cudate}
-    t = RemoteShell()
-    test_host = '47.100.120.114'
-    t2 = RemoteShell(host=test_host)
-    local_path = os.path.join(BASEDIR, 'init_dir')
-    if not t2.upload(local_path, dst_path, isdir=True):
-        logger.error("init dst dir failed with test env")
-    if not t.upload(local_path, dst_path, isdir=True):
-        logger.error("init dst dir failed with real env")
-    del(t, t2)
-    logger.info(f'PLATFORM:{platform} | LOCAL_PATH:./init_dir | DST_PATH:{dst_path}')
-    return {'succ': True}
-
-
-def put(t1, t2, dir_path, dst_path):
-    res1 = t1.upload(dir_path, dst_path, isdir=True)
-    res2 = t2.upload(dir_path, dst_path, isdir=True)
-    del(t1, t2)
-    return True if res1 and res2 else False
-
-
-def upload_file(dir_path, platform, isCpa=False):
-    cudate = strftime('%Y-%m-%d')
-    if not isCpa:
-        dst_path = '/data/python/%(platform)s/%(currentDay)s/' % {'platform': platform, 'currentDay': cudate}
-    else:
-        dst_path = '/data/python/CPA/%(platform)s/%(currentDay)s/' % {'platform': platform, 'currentDay': cudate}
-    files = os.listdir(dir_path)
-    if not files:
-        # with open(os.path.join(dir_path, 'no_data.json'), 'w') as f:
-        #     f.write('{"msg": "no data"}')
-        return True
-    t = RemoteShell()
-    t2 = RemoteShell(host='47.100.120.114')          # test env
-    res = put(t, t2, dir_path, dst_path)
-    if not res:
-        logger.error(f'Upload failed with the path: {dst_path}')
-    logger.info(f'PLATFORM:{platform} | LOCAL_PATH:{dir_path} | DST_PATH:{dst_path}')
-    return res
-
-
 if __name__ == '__main__':
-    r = RemoteShell('47.100.120.114')
-    dst = '/data/python/tst/'
-    source = os.path.join(os.path.abspath('../save_data'), )
-    src = r'G:\python_work\python\commen\platform_crawler\save_data\Alios\2019-07-03\1248_2019-07-03_14-55-23_wangdi@btomorrow.cn'
+    # r = RemoteShell(host='115.231.130.17', port=20277, user='root', pwd='abcd1234')
+    r = RemoteShell()
+    dst = '/data/python/balance_data'
+    source = os.path.join(os.path.abspath('../save_data'), 'balance_data')
+    src = r'deploy.tar.gz'
     # r.put(source, dst)
-    upload_file(src, 'Alios')
+    r.upload(source, dst, isdir=True)
     # info = logger.info('DST_PATH | sdfsf}')
 
 
