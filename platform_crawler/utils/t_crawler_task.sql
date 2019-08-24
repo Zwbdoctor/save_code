@@ -60,6 +60,7 @@ where updateCookieTime='2019-03-11 12:19:05' and updateTime='2019-03-11 12:19:05
 ---------------------------------------------------------
 update t_crawler_task set status=1 where status=2 and createTime > '2019-06-03';
 ---------------------------------------------------------
-
+-- 账号对应的AE，产品
+select distinct(acctNo),AEName,productName from t_execute_order_info where acctNo in (2365493663,3012181760);
 
 

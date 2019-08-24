@@ -39,6 +39,7 @@ def class_register(class_key=None):
         'ZY': rebuild_path(MSG_BASE_MODULE_PATH, 'zuiyou.ZuiYouSpider'),
         'TA': rebuild_path(MSG_BASE_MODULE_PATH, 'tuia_spider.TuiASpider'),
         'LH': rebuild_path(MSG_BASE_MODULE_PATH, 'liehu_spider.LieHuSpider'),
+        'KS': rebuild_path(MSG_BASE_MODULE_PATH, 'kuaishou_spider.KuaiShouSpider'),
         # ------------  CPA  -------------
         '360A': rebuild_path(CPA_BASE_MODULE_PATH, 'cpa_channel_360_zong.Channel360zong'),
         '360': rebuild_path(CPA_BASE_MODULE_PATH, 'cpa_channel_360_fen.Channel360fen'),
