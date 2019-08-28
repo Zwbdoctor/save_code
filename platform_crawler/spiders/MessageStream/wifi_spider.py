@@ -55,11 +55,13 @@ class WifiSpider(TaskProcess):
         if not res.get('succ'):
             raise Exception(res.get('msg'))
         balance = res.get('msg').get('result').get('balance')/100
-        self.balance_data = {'账号': self.acc, '余额': balance}
+        # self.balance_data = {'账号': self.acc, '余额': balance}
+        self.balance_data = balance
 
     def parse_balance(self):
         headers = ['账号', '余额']
-        return headers, [self.balance_data]
+        # return headers, [self.balance_data]
+        return headers, self.balance_data
 
     def login_part(self, um):
         um['platform'] = 'wifikey'
@@ -81,14 +83,12 @@ class WifiSpider(TaskProcess):
         data_list = []
         for sd, ed in dates:
             data_name = '%s_%s' % (sd, ed)
-            logger.info('date range ---- %s~%s' % (sd, ed))
             # 数据
             data_res = self.get_data(sd, ed, data_name)
             if not data_res.get('succ'):
                 self.login_obj.close_chrome_debugger()
                 return {'succ': False}
             if data_res.get('msg') != 'no data':
-                logger.info(f'date_range: {sd}~{ed} | no data')
                 data_list.append(1)
         if not data_list:
             self.result_kwargs['has_data'] = 0
@@ -127,12 +127,13 @@ class WifiSpider(TaskProcess):
             i += 1
 
         if not data_list:
+            logger.info(f'date_range: {start}~{end} | no data')
             return {'succ': True, 'msg': 'no data'}
         data_path = os.path.join(self.dir_path, data_name + '.json')
         data['result']['list'] = data_list
         data['result'].pop('pageNo')
         data['result'].pop('pageSize')
-        logger.debug('crawled data: %s' % data)
+        logger.info('date range ---- %s~%s | crawled data: %s' % (start, end, data))
         with open(data_path, 'w', encoding='utf-8') as f:
             json.dump(data, f)
         return {'succ': True}

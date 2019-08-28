@@ -263,12 +263,13 @@ class AppTreasureGDT(TaskProcess):
                 # unknown_account_name_type[account_name] = round(i.get('balance')/100, 2)
                 continue
         header = ['账号', '现金账户', '虚拟账户', '信用账户', '临时信用账户', '总计']
-        balance_data['总计'] = sum(balance_data.values())
+        summary = sum(balance_data.values())
+        balance_data['总计'] = summary
         balance_data['账号'] = self.acc
         if unknown_account_name_type:
             header.extend(unknown_account_name_type.keys())
             balance_data.update(unknown_account_name_type)
-        return header, [balance_data]
+        return header, summary
 
     def login_part(self, ui):
         # 登陆

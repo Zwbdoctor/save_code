@@ -22,13 +22,13 @@ def client(addr='127.0.0.1'):
 def cli_menu():
     cpa = '192.168.0.121'
     msg = '192.168.0.119'
-    msg2 = '192.168.0.106'
+    msg2 = '192.168.10.198'
     client_maps = {'cpa': cpa, 'msg': msg, 'msg2': msg2, 'default': '127.0.0.1'}
     recent = []
     recent_msg = ''
     while True:
         inp_data = input(f'Please choose one of the client to connect:\n{client_maps.keys()}, '
-                         f'or press any key to exit\n{recent_msg  if recent else ""}>>:').strip()
+                         f'or press any key to exit\n{recent_msg  if recent else ""}<<:').strip()
         if inp_data in client_maps.keys():
             client(client_maps.get(inp_data))
             recent.append(inp_data)

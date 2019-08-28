@@ -121,7 +121,7 @@ class BaiduMessageSpider(TaskProcess):
         data = [{'账号': self.acc, '余额': float(self.balance_data)}]
         logger.info(data)
         header = ['账号', '余额']
-        return header, data
+        return header, float(self.balance_data)
 
     def login_part(self, ui):
         self.login_obj = BaiDuMessage(ui, ui.get('platform'))
@@ -145,7 +145,7 @@ class BaiduMessageSpider(TaskProcess):
         # 获取登录后浏览器驱动和数据
         self.d = login_res.pop('driver')
         self.ensure_proto()
-        self.balance_data = self.d.find_element_by_class_name('info-a-value').text.strip()
+        self.balance_data = self.d.find_element_by_class_name('info-a-value').text.strip().replace(',', '')
         self.wait = WebDriverWait(self.d, 20)
         self.cookie_list = login_res.get('cookies')
 

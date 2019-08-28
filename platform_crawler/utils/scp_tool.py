@@ -2,6 +2,7 @@ import paramiko
 import pexpect
 import scp
 import os
+import traceback
 
 from platform_crawler.settings import BASEDIR
 
@@ -69,14 +70,17 @@ class RemoteShell:
         self.port = port
         self.username = user
         self.pwd = pwd
-        self._sock = None
+        self.__transport = None
+        self.__sock = None
 
-    @property
-    def __transport(self):
-        transport = paramiko.Transport((self.host, self.port))
-        transport.connect(username=self.username, password=self.pwd)
-        self._sock = transport
-        return transport
+    def connect(self):
+        # transport = paramiko.Transport((self.host, self.port))
+        # transport.connect(username=self.username, password=self.pwd)
+        ssh_client = paramiko.SSHClient()
+        ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy)
+        ssh_client.connect(self.host, self.port, self.username, self.pwd)
+        self.__transport = ssh_client.get_transport()
+        self.__sock = ssh_client
 
     def run_cmd(self, command):
         """
@@ -86,8 +90,8 @@ class RemoteShell:
         :param command:
         :return:
         """
-        ssh = paramiko.SSHClient()
-        ssh._transport = self.__transport
+        self.connect()
+        ssh = self.__sock
         # 执行命令
         stdin, stdout, stderr = ssh.exec_command(command)
         # 获取命令结果
@@ -101,23 +105,28 @@ class RemoteShell:
         else:
             return {'color': 'green', 'res': res}
 
-    def upload(self, local_path, target_path, isdir=False):
+    def upload(self, local_path, target_path, isdir=False, reties=0):
         # 连接，上传
-        sftp = paramiko.SFTPClient.from_transport(self.__transport)
+        sftp = None
         try:
+            self.connect()
+            sftp = paramiko.SFTPClient.from_transport(self.__transport)
             with scp.SCPClient(self.__transport) as scp_client:
                 print('正在上传...')
                 scp_client.put(local_path, target_path, recursive=isdir)
                 sftp.chmod(target_path, 0o755)
                 print('上传完毕!')
-            return True
+            return True, None
         except Exception as e:
-            print(e)
-            return False
+            reties += 1
+            if reties == 2:
+                exc = traceback.format_exc(e)
+                return False, exc
+            self._close()
+            self.upload(local_path, target_path, isdir=isdir, reties=reties)
         finally:
             sftp.close()
-            if self._sock.active:
-                self._sock.close()
+            self._close()
 
     def download(self, target_path, local_path):
         # 连接，下载
@@ -136,6 +145,15 @@ class RemoteShell:
         else:
             value = bytes_or_str
         return value
+
+    def _close(self):
+        if self.__transport is not None:
+            self.__transport.close()
+        if self.__sock is not None:
+            self.__sock.close()
+
+    def __del__(self):
+        self._close()
 
 
 if __name__ == '__main__':

@@ -4,7 +4,7 @@ import win32gui
 import psutil
 import logging
 from ctypes import windll
-from platform_crawler.settings import join, IMG_PATH, GlobalVal
+from platform_crawler.settings import join, IMG_PATH, GlobalVal, GlobalFunc
 from platform_crawler.configs.excute_paths import ExecutePaths
 
 
@@ -27,7 +27,9 @@ authentication_img = join(TIM_IMG_PATH, 'need_auth.png')
 VERIFY_TIMES = 1
 
 
-def kill_qq():
+def kill_qq(src=True):
+    if src:
+        GlobalFunc.save_screen_shot(GlobalVal.err_src_name % time.time()*1000)
     for e in psutil.process_iter():
         a = e.name()
         if 'TIM' in a:
@@ -76,6 +78,7 @@ def handle_login_res(loginid):
         return True
     else:
         logger.info('Unknown situation with account: %s' % ACC)
+        GlobalFunc.save_screen_shot(GlobalVal.err_src_name % time.time()*1000)
         res = False
     if not res:
         pic_name = join(NEW_ERROR_PATH, 'error_%s.png' % (int(time.time())))
@@ -140,7 +143,7 @@ def login_cli(acc, pwd, util):
     ACC = acc
     pag = util.pag
     logger = logging.getLogger('%s.login_with_tim' % GlobalVal.CUR_MAIN_LOG_NAME)
-    kill_qq()
+    kill_qq(src=False)
     return QQ(acc, pwd)
 
 

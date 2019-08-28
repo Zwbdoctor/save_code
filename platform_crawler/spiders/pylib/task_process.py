@@ -1,7 +1,6 @@
 import json
 import os
 import time
-import pyautogui
 
 from selenium import webdriver
 from selenium.webdriver.support.wait import WebDriverWait
@@ -57,6 +56,7 @@ class TaskProcess(BaseCrawler):
         settings.GlobalVal.CUR_MAIN_LOG_NAME = platform
         logger = u.record_log(log_path, platform)
         self.logger = logger
+        return self.logger
 
     def init_browser(self, page_timeout=120, element_timeout=10):
         co = webdriver.ChromeOptions()
@@ -74,6 +74,7 @@ class TaskProcess(BaseCrawler):
 
     def wait_element(self, element_type, text, ec=EC.visibility_of_element_located, wait_time=10):
         if not self.wait:
+            assert self.d is not None, 'WebDriverWait Object Need Initial WebDriver First'
             self.wait = WebDriverWait(self.d, wait_time)
         if wait_time != 10:
             self.wait._timeout = wait_time
@@ -119,10 +120,11 @@ class TaskProcess(BaseCrawler):
         if isinstance(res, dict):
             if not res.get('succ', False):
                 return res
-        if self.result_kwargs.get('has_data') == 0:
-            # 获取账户余额
-            return self.get_account_balance()
+        # 获取账户余额
+        self.get_account_balance()
         if not self.is_get_img:
+            return
+        if self.result_kwargs.get('has_data') == 0:
             return
         return self.get_img_part(get_data_res=res, **kwargs)
 
@@ -131,9 +133,6 @@ class TaskProcess(BaseCrawler):
 
     def get_img_part(self, *args, **kwargs):
         ...
-
-    def save_screen_shot(self, img_name):
-        pyautogui.screenshot(img_name)
 
     def login_and_get_data(self, ui):
         res = self.deal_login_result(self.login_part(ui))
@@ -148,16 +147,35 @@ class TaskProcess(BaseCrawler):
         ...
 
     def get_account_balance(self):
+        self.logger.info('There is no data since last month!')
         res = self.get_balance()
         if isinstance(res, dict) and not res.get('succ'):
             raise Exception(res)
         header, rows = self.parse_balance()
         if not rows:
             return
-        self.save_balance_to_xls(header, rows)
+        # self.save_balance_to_xls(header, rows)
+        self.save_balance_data(rows)
 
     def parse_balance(self, *args, **kwargs):
         return [], []
+
+    def save_balance_data(self, balance):
+        date = time.strftime('%Y-%m-%d')
+        file_name = settings.join(settings.BAL_PATH, f'balance_data_{date}_{task_type}.json')
+        try:
+            with open(file_name, 'r') as reader:
+                data = json.load(reader)
+        except:
+            data = {}
+        if not data.get(self.platform):
+            data[self.platform] = []
+        if isinstance(balance, list):
+            data.get(self.platform).extend(balance)
+        else:
+            data.get(self.platform).append({'account': self.acc, 'balance': balance})
+        with open(file_name, 'w') as writer:
+            json.dump(data, writer)
 
     def save_balance_to_xls(self, header: list, data: list):
         # open workbook
@@ -196,6 +214,7 @@ class TaskProcess(BaseCrawler):
             ws.append(i)
         # save
         wb.save(file_name)
+        self.logger.info('Balance saved ok!')
         return
 
     def init_paths(self, ui):
@@ -209,24 +228,26 @@ class TaskProcess(BaseCrawler):
         self.dir_path = settings.join(settings.sd_path, self.platform, cur_time, dir_name)
         os.makedirs(self.dir_path)
 
-        self.err_img_name = settings.join(self.dir_path, 'error_%s_%s.jpg' % (int(time.time() * 1000), task_type))
+        self.err_img_name = settings.join(self.dir_path, 'error_%s.jpg')
         self.dst_path = '/data/python/%s/%s/%s' % (self.platform, cur_time, dir_name)
         if self.is_cpa:
             self.dst_path = '/data/python/%s/%s/%s/%s' % ('CPA', self.platform, cur_time, dir_name)
         settings.DST_DIR = self.dst_path  # Add to login class for post res
+        self.logger.info(f'Init local directory: {self.dir_path}')
 
     def run(self, ui):
         """for child class to rewrite"""
         # 初始化路径数据
         self.init_paths(ui)
+        self.init_global_params()
 
         # 登陆 && 获取数据/图片
         try:
             res = self.login_and_get_data(ui)
             if res is not None and not res.get('succ'):  # 正常的报错场景
-                self.save_screen_shot(self.err_img_name)
+                settings.GlobalFunc.save_screen_shot(self.err_img_name % int(time.time()*1000))
         except Exception as er:
-            self.save_screen_shot(self.err_img_name)  # 未知报错场景
+            settings.GlobalFunc.save_screen_shot(self.err_img_name % int(time.time() * 1000))  # 未知报错场景
             logger.error(er, exc_info=1)
             res = {'succ': False, 'msg': 'got unKnown error'}
 
@@ -248,6 +269,9 @@ class TaskProcess(BaseCrawler):
         if not res.get('succ'):
             return res
         return {'succ': True}
+
+    def init_global_params(self):
+        settings.GlobalVal.err_src_name = self.err_img_name
 
     def run_task(self, ui):
         ui['password'] = get_pwd(ui.get('password')).strip()
@@ -277,7 +301,7 @@ class TaskProcess(BaseCrawler):
         except Exception as e:
             logger.warning('Got an err about account %s, detail msg like this:' % ui['account'])
             logger.error(e, exc_info=1)
-            self.save_screen_shot(self.err_img_name)  # 账号无效场景
+            settings.GlobalFunc.save_screen_shot(self.err_img_name % int(time.time()*1000))  # 账号无效场景
             self.upload_file(ui=ui)
             self.result_kwargs.update({'has_data': 0, 'has_pic': 0})
             self.post_res(ui['id'], ui['account'], status=5, **self.result_kwargs)

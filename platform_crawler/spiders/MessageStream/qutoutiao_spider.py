@@ -117,7 +117,7 @@ esui.util.get('ctrlmcaldailyTotalDateRegionendmonthview')._selectByItem(de);
 
     def parse_balance(self):
         header = ['账号', '余额']
-        return header, self.balance_data
+        return header, self.balance_data[0].get('余额')
 
     def login_part(self, ui):
         self.login_obj = QuTouTiao(ui, '%s.login' % ui.get('platform'))

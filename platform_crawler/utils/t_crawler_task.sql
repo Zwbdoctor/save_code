@@ -63,4 +63,7 @@ update t_crawler_task set status=1 where status=2 and createTime > '2019-06-03';
 -- 账号对应的AE，产品
 select distinct(acctNo),AEName,productName from t_execute_order_info where acctNo in (2365493663,3012181760);
 
+select l.platform,l.account, r.acctNo, r.AEName, r.productName
+from t_crawler_task l left join t_execute_order_info r on l.account = r.acctNo where l.createTime > '2019-08-28' and l.status in (4);
+
 

@@ -191,14 +191,15 @@ class AliyunSpider(TaskProcess):
         res = self.get_child_accounts()
         if not res.get('succ'):
             raise Exception(res.get('msg'))
-        for x in self.none_cost.copy():
-            if self.none_cost.count(x) < 2:
-                self.none_cost.remove(x)
-        self.none_cost = list(set(self.none_cost))
+        # 无消耗爬取控制
+        # for x in self.none_cost.copy():
+        #     if self.none_cost.count(x) < 2:
+        #         self.none_cost.remove(x)
+        # self.none_cost = list(set(self.none_cost))
         for acct, company in self.child_accounts:
-            if acct not in self.none_cost:
-                logger.info('skip has cost: %s' % acct)
-                continue
+            # if acct not in self.none_cost:
+            #     logger.info('skip has cost: %s' % acct)
+            #     continue
             quote_acct = quote(acct)
             url = 'https://e.yunos.com/api/member/balance?identity=%s' % quote_acct
             ref = 'https://e.yunos.com/?identity=%s' % quote_acct
@@ -209,7 +210,7 @@ class AliyunSpider(TaskProcess):
                 logger.error('balance res: %s' % res.get('msg'))
                 return res
             balance = res.get('msg').get('data')/100
-            bd = {'账号': acct, '账户余额': balance}
+            bd = {'account': acct, 'balance': balance}
             logger.info(bd)
             self.balance_data.append(bd)
 

@@ -82,11 +82,14 @@ class VivoSpider(TaskProcess):
         # 二代账号
         if self.flag:
             self.get_cid(get_bal=True)
-            if not self.balance_data:   # 二代账号，没有子账号
+            if not self.balance_data:  # 二代账号，没有子账号
                 return {'succ': True}
+            balance = 0
             for x in self.balance_data:
                 x.pop('name')
-            logger.info('balance_data: %s' % self.balance_data)
+                balance += (x.get('现金余额') + x.get('虚拟金余额'))
+            logger.info('balance_data(summary): %s' % balance)
+            self.balance_data = balance
             return {'succ': True}
         # 普通账号
         if len(self.none_cost_list) < 2:
@@ -98,6 +101,7 @@ class VivoSpider(TaskProcess):
             raise Exception(res.get('msg'))
         balance = float(res.get('msg').get('balance'))
         self.balance_data = [{'账户余额': balance}]
+        self.balance_data = balance
         logger.info('balance_data: %s' % self.balance_data)
         return {'succ': True}
 
@@ -123,8 +127,8 @@ class VivoSpider(TaskProcess):
         if get_bal:
             self.balance_data = [{'账号': i.get('companyName'), '现金余额': i.get('cpdCashBalance'),
                                   '虚拟金余额': i.get('cpdDiscountBalance'), 'name': i.get('name')}
-                                 for i in data_list
-                                 if i.get('status') == 2 and i.get('name') in self.none_cost_list]
+                                 for i in data_list if i.get('status') == 2]
+            #                    if i.get('status') == 2 and i.get('name') in self.none_cost_list]
             return
         uids = [(e.get('name'), e.get('uuid')) for e in data_list if e.get('status') == 2]
         return {'succ': True, 'msg': uids}
@@ -248,4 +252,3 @@ document.querySelector('#endDate').value="%s";
         if not files:
             self.result_kwargs['has_data'] = 0
         return {'succ': True}
-

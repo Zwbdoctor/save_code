@@ -63,7 +63,8 @@ class SouGouSpider(TaskProcess):
             raise Exception('Not get balance data: Something wrong with balance xpath)')
         balance = float(balance[0].strip())
         header = ['账号', '余额']
-        return header, [{'账号': self.acc, '余额': balance}]
+        # return header, [{'账号': self.acc, '余额': balance}]
+        return header, balance
 
     def get_data_process(self):
         self.wait_element(By.CSS_SELECTOR, 'a.tip.fr').click()      # 进入广告投放中心

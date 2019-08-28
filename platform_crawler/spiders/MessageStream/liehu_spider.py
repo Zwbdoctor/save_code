@@ -183,7 +183,7 @@ class LieHuSpider(TaskProcess):
 
     def parse_balance(self):
         data = float(self.balance_data) if self.balance_data else 0
-        data = [{'账号': self.acc, '余额': data}]
+        # balance_data = [{'账号': self.acc, '余额': data}]
         header = ['账号', '余额']
         return header, data
 

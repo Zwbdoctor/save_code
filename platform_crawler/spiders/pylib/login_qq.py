@@ -11,7 +11,7 @@ from platform_crawler.utils.utils import Util
 from platform_crawler.utils.post_get import get
 from platform_crawler.spiders.pylib.login_qq_with_cli import login_cli, kill_qq
 from platform_crawler.spiders.pylib.slip_py import vc_location
-from platform_crawler.settings import join, JS_PATH, IMG_PATH
+from platform_crawler.settings import join, JS_PATH, IMG_PATH, GlobalFunc, GlobalVal
 
 logger = None
 base_vc_path = join(IMG_PATH, 'slip_vc_imgs')
@@ -170,6 +170,7 @@ class LoginQQ:
                     break
             else:
                 logger.error('----------get vc_location failed')
+                GlobalFunc.save_screen_shot(GlobalVal.err_src_name % int(time.time() * 1000))
                 return {'succ': False, 'msg': 'get vc_location failed after 2 times'}
         self.d.implicitly_wait(20)
         time.sleep(2)
@@ -177,7 +178,7 @@ class LoginQQ:
         res = self.is_login()
         if not res.get('succ'):
             if not login_cli(self.user_info.get('account'), self.user_info.get('password'), self.u):
-                kill_qq()
+                kill_qq(src=False)
                 logger.error('something error about account or password')
                 return {'succ': False, 'msg': 'acc_pwd'}
             self.d.refresh()
@@ -186,7 +187,7 @@ class LoginQQ:
             self.d.find_element_by_css_selector('#qlogin_list .face').click()  # 点击已经登陆的qq登陆
             self.d.implicitly_wait(5)
             res = self.is_login()
-        kill_qq()
+        kill_qq(src=False)
         return res
 
     def is_login(self):  # 判断cookie中是否存在skey,这个是login成功时response set-cookie

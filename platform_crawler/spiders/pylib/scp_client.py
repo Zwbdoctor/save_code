@@ -21,21 +21,21 @@ def init_dst_dir(platform, is_cpa=False):
     test_host = '47.100.120.114'
     t2 = RemoteShell(host=test_host)
     local_path = os.path.join(BASEDIR, 'init_dir')
-    if not t2.upload(local_path, dst_path, isdir=True):
-        logger.error("init dst dir failed with test env")
-    if not t.upload(local_path, dst_path, isdir=True):
-        logger.error("init dst dir failed with real env")
+    put(t, t2, local_path, dst_path)
     del(t, t2)
     logger.info(f'PLATFORM:{platform} | LOCAL_PATH:./init_dir | DST_PATH:{dst_path}')
     return {'succ': True}
 
 
-def put(t1, t2, dir_path, dst_path):
+def put(t1, t2, dir_path, dst_path, isdir=True):
     """执行上传"""
-    res1 = t1.upload(dir_path, dst_path, isdir=True)
-    res2 = t2.upload(dir_path, dst_path, isdir=True)
-    del(t1, t2)
-    return True if res1 and res2 else False
+    err_list = []
+    for x in [t1, t2]:
+        res, err = x.upload(dir_path, dst_path, isdir=isdir)
+        if not res:
+            logger.error(err, exc_info=1)
+            err_list.append(1)
+    return True if len(err_list) == 0 else False
 
 
 def upload_file(dir_path, platform, is_cpa=False):
@@ -54,5 +54,15 @@ def upload_file(dir_path, platform, is_cpa=False):
     if not res:
         logger.error(f'Upload failed with the path: {dst_path}')
     logger.info(f'PLATFORM:{platform} | LOCAL_PATH:{dir_path} | DST_PATH:{dst_path}')
+    return res
+
+
+def upload_balance(dir_path, dst_path):
+    t = RemoteShell()
+    t2 = RemoteShell(host='47.100.120.114')          # test env
+    res = put(t, t2, dir_path, dst_path, isdir=False)
+    if not res:
+        logger.error(f'Upload failed with the path: {dst_path}')
+    logger.info(f'PLATFORM:Balance | LOCAL_PATH:{dir_path} | DST_PATH:{dst_path}')
     return res
 

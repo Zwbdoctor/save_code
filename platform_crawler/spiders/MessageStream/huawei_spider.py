@@ -10,7 +10,6 @@ from platform_crawler.spiders.get_login_data import login_huawei
 from platform_crawler.settings import join, JS_PATH
 from platform_crawler.spiders.pylib.task_process import TaskProcess
 
-
 u = Util()
 logger = None
 base_headers = {
@@ -27,7 +26,7 @@ class HuaWeiSpider(TaskProcess):
 
     def __init__(self, user_info, **kwargs):
         global logger
-        self.need_list = [{'ca': 600000313, 'cname': ['关键词搜索', '推荐区']}]         # [{'ca': int, 'cname': []}]
+        self.need_list = [{'ca': 600000313, 'cname': ['关键词搜索', '推荐区']}]  # [{'ca': int, 'cname': []}]
         super().__init__(headers=base_headers, user_info=user_info, **kwargs)
         logger = self.logger
         self.balance_data = []
@@ -51,10 +50,10 @@ class HuaWeiSpider(TaskProcess):
         accounts = [x.get('accountId') for x in data.get('accounts')]
         if total_count > count:
             return self.get_child_accounts(count=total_count)
-        if self.comp_has_none_cost:
-            self.balance_data = [{'账号': x.get('corpName'), '余额': x.get('balance'), 'id': x.get('accountId')}
-                                 for x in data.get('accounts')
-                                 if x.get('accountId') in self.comp_has_none_cost]
+        # if self.comp_has_none_cost:
+        self.balance_data = [{'account': x.get('corpName'), 'balance': x.get('balance'), 'id': x.get('accountId')}
+                             for x in data.get('accounts')]
+        #                    if x.get('accountId') in self.comp_has_none_cost]
         return {'succ': True, 'accounts': accounts}
 
     def get_pid(self, child_account, special=None):
@@ -76,7 +75,8 @@ class HuaWeiSpider(TaskProcess):
         data = json.loads(data['msg'].content.decode())
         # 对同名产品的不同id进行分组
         task_list = data.get('datas').get('taskList')
-        pids = [(x.get('taskID'), x.get('contentAppName'), x.get('taskName')) for x in task_list] if data.get('datas').get('totalCount') > 0 else []
+        pids = [(x.get('taskID'), x.get('contentAppName'), x.get('taskName')) for x in task_list] if data.get(
+            'datas').get('totalCount') > 0 else []
         if special:
             pids = [x for x in pids if x[2] in special.get('cname')]
         after_distinct = list(set([e[1] for e in pids]))
@@ -105,7 +105,8 @@ class HuaWeiSpider(TaskProcess):
             return {'succ': False, 'msg': 'no data'}
         # 处理请求参数
         url = "https://developer.huawei.com/consumer/cn/service/apcs/app/gwService"
-        params = {"taskIDList": json.dumps(pid), "groupID": "ALL", "beginDate": sd, "endDate": ed, "sortField": "task,time", "sortType": "0",
+        params = {"taskIDList": json.dumps(pid), "groupID": "ALL", "beginDate": sd, "endDate": ed,
+                  "sortField": "task,time", "sortType": "0",
                   "maxRecCount": 999998, "fromRecCount": 1, "regions": "CN", "customerAccountId": child_account}
         pdata = {"apiName": "Inapp.Developer.reportPromoApp", "params": json.dumps(params)}
 
@@ -140,7 +141,7 @@ class HuaWeiSpider(TaskProcess):
                 spe = None
                 # if ca not in ['600000313', 600000313]:        # 单独爬取某个子账号
                 #     continue
-                for x in self.need_list:        # 针对特殊的子账户id，特殊的产品来获取产品id
+                for x in self.need_list:  # 针对特殊的子账户id，特殊的产品来获取产品id
                     if ca == x.get('ca'):
                         spe = x.get('cname')
                         pids = self.get_pid(ca, special=x)
@@ -178,15 +179,15 @@ class HuaWeiSpider(TaskProcess):
         time.sleep(1)
         self.d.find_element_by_xpath(drop_header_xpath).click()
         time.sleep(1)
-        for e in self.d.find_elements_by_xpath(year_list_xpath):        # start_year
+        for e in self.d.find_elements_by_xpath(year_list_xpath):  # start_year
             if sd_list[0] == e.text:
                 e.click()
         time.sleep(1)
-        for e in self.d.find_elements_by_xpath(mth_list_xpath):         # start_month
+        for e in self.d.find_elements_by_xpath(mth_list_xpath):  # start_month
             if sd_list[1] == e.text:
                 e.click()
         time.sleep(1)
-        for e in self.d.find_elements_by_xpath(day_list):               # start_day
+        for e in self.d.find_elements_by_xpath(day_list):  # start_day
             if sd_list[2] == e.text:
                 e.click()
 
@@ -196,15 +197,15 @@ class HuaWeiSpider(TaskProcess):
         time.sleep(1)
         self.d.find_element_by_xpath(drop_header_xpath).click()
         time.sleep(1)
-        for e in self.d.find_elements_by_xpath(year_list_xpath):        # end_year
+        for e in self.d.find_elements_by_xpath(year_list_xpath):  # end_year
             if ed_list[0] == e.text:
                 e.click()
         time.sleep(1)
-        for e in self.d.find_elements_by_xpath(mth_list_xpath):         # end_month
+        for e in self.d.find_elements_by_xpath(mth_list_xpath):  # end_month
             if ed_list[1] == e.text:
                 e.click()
         time.sleep(1)
-        for e in self.d.find_elements_by_xpath(day_list):               # end_day
+        for e in self.d.find_elements_by_xpath(day_list):  # end_day
             if ed_list[2] == e.text:
                 e.click()
         time.sleep(1)
@@ -248,7 +249,7 @@ class HuaWeiSpider(TaskProcess):
         old_name = pname
         if special_account:
             print('=================================================\n')
-            pname = '%s&%s' % (pname, special_account[0])           # 正常情况自动点击，非正常情况需要手动选日期
+            pname = '%s&%s' % (pname, special_account[0])  # 正常情况自动点击，非正常情况需要手动选日期
             input('please choose these selection then press enter to continue:\n%s' % special_account[0])
         last_mth_date_xpath = "/html/body/main/section/div/div/div/section/section[1]/div/div[4]/ul/li[1]"
         # this_month_xpath = '/html/body/main/section/div/div/div/section/section[1]/div/div[4]/ul/li[3]'
@@ -274,10 +275,10 @@ class HuaWeiSpider(TaskProcess):
         return cut_res
 
     def get_balance(self):
-        for x in self.comp_has_none_cost.copy():
-            if self.comp_has_none_cost.count(x) != 2:       # 不是两个月都没数据的，就从余额数据中删除
-                self.comp_has_none_cost.remove(x)
-        self.comp_has_none_cost = list(set(self.comp_has_none_cost))
+        # for x in self.comp_has_none_cost.copy():
+        #     if self.comp_has_none_cost.count(x) != 2:       # 不是两个月都没数据的，就从余额数据中删除
+        #         self.comp_has_none_cost.remove(x)
+        # self.comp_has_none_cost = list(set(self.comp_has_none_cost))
         self.get_child_accounts()
 
     def parse_balance(self):
@@ -316,7 +317,8 @@ class HuaWeiSpider(TaskProcess):
         for i in get_data_res:
             if i.get('hasData'):
                 try:
-                    res = self.get_img(i.get('child_account'), i.get('pname'), i.get('sd'), i.get('ed'), special_account=i.get('special'))
+                    res = self.get_img(i.get('child_account'), i.get('pname'), i.get('sd'), i.get('ed'),
+                                       special_account=i.get('special'))
                     if not res['succ']:
                         i['img'] = True
                         err_list.append(i)

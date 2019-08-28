@@ -8,7 +8,7 @@ import os
 import json
 
 from platform_crawler.utils.utils import Util
-from platform_crawler.utils.scp_tool import upload_file, init_dst_dir
+from platform_crawler.spiders.pylib.scp_client import upload_file, init_dst_dir
 from platform_crawler.spiders.pylib.cut_img import cut_img
 from platform_crawler.spiders.pylib.task_process import TaskProcess
 from platform_crawler.spiders.get_login_data.login_oppo import Oppo
@@ -62,10 +62,7 @@ class OppoSpider(TaskProcess):
             return {'succ': False, 'msg': 'no data'}
         # 写入文件
         with open(file_name, 'w', encoding='utf-8') as f:
-            try:
-                json.dump(data, f)
-            except Exception as e:
-                logger.error(e, exc_info=1)
+            json.dump(data, f)
         logger.info('crawled data: --------%s' % data)
         return {'succ': True, 'data_type': data_type, 'content': data}
 
@@ -194,9 +191,9 @@ class OppoSpider(TaskProcess):
         self.balance_data = res.get('msg').get('data')
 
     def parse_balance(self):
-        data = {'账号': self.acc, '余额': self.balance_data.get('cashBal', 0)}
+        # data = {'账号': self.acc, '余额': self.balance_data.get('cashBal', 0)}
         headers = ['账号', '余额']
-        return headers, [data]
+        return headers, self.balance_data.get('cashBal', 0)
 
     def run(self, ui):
         # 创建文件夹

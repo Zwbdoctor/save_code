@@ -110,11 +110,6 @@ class LoginTuiA:
                 logger.error(er, exc_info=1)
                 continue
         else:
-            # params = [self.user_info.get('id'), self.user_info.get('account'), self.user_info.get('platform'), None,
-            #           False]
-            # if not post_res(*params):
-            #     logger.error('----------useless account! Post result failed!')
-            # else:
             logger.info('useless account!(%s) Post success!' % self.user_info.get('account'))
             self.d.quit()
             return {'succ': False, 'invalid_account': True}
@@ -190,8 +185,8 @@ class TuiASpider(TaskProcess):
             raise Exception(res.get('msg'))
         balance = res.get('msg').get('data').get('balance')/100
         header = ['账号', '余额']
-        data = [{'账号': self.acc, '余额': balance}]
-        return header, data
+        # data = [{'账号': self.acc, '余额': balance}]
+        return header, balance
 
     def login_part(self, ui):
         self.login_obj = LoginTuiA(ui)

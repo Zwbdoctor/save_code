@@ -17,12 +17,15 @@ from platform_crawler.utils.post_get import post
 from platform_crawler.utils.utils import Util
 from platform_crawler.spiders.pylib.kill_sth import stop_thread, kill_chrome_fscapture, kill_process_with_args       # , clean_desk
 from platform_crawler.spiders.pylib.post_res import post_res
+from platform_crawler.spiders.pylib.scp_client import upload_balance
 from platform_crawler.settings import *
 from . import class_register, import_source
 
 
 # class register
 
+SendBalanceOnce = False
+TASK_CODE = 0
 get_task_url = 'http://erp.btomorrow.cn/adminjson/ERP_PubishCrawlerTask'
 u = Util()
 spider_type = class_register()
@@ -161,11 +164,23 @@ def timer():
     write_time = time()
 
 
+def send_balance_to_server():
+    global SendBalanceOnce
+    if TASK_CODE == 8:
+        if not SendBalanceOnce:
+            date = strftime('%Y%m%d')
+            file_name = f'balance_data_{date}_{GlobalVal.CUR_TASK_TYPE}.json'
+            src = os.path.join(BAL_PATH, file_name)
+            dst = f'/data/python/Balance/{file_name}'
+            upload_balance(src, dst)
+            SendBalanceOnce = True
+
+
 # get task function
 def get_task():
-    global task_type
+    global task_type, TASK_CODE
     # 获取任务
-    data = {'platformType': task_type, 'flag': pc_name}
+    data = {'platformType': GlobalVal.CUR_TASK_TYPE, 'flag': pc_name}
     ret = post(get_task_url, data=json.dumps(data), headers={'Content-Type': 'application/json'}, timeout=60)
     if not ret['is_success']:
         # 请求失败
@@ -181,12 +196,13 @@ def get_task():
             sleep(30)   # 服务器error
             logger.error('server error')
             return False
-        if um['errorCode'] == 8:            # 没有任务
+        TASK_CODE = um.get('errorCode')
+        if TASK_CODE == 8:            # 没有任务
             print('none task')
-            task_type = 'MSG' if task_type in 'CPA' else 'CPA'
+            task_type = 'MSG' if task_type == 'CPA' else 'CPA'
             sleep(60)
             return False
-        elif um['errorCode'] == 0:          # 得到任务
+        elif TASK_CODE == 0:          # 得到任务
             data = um.get('body')
             return data
         else:
@@ -228,15 +244,19 @@ def task_filter(data):
 
 
 def loop_run():
-    global task_type
+    global task_type, SendBalanceOnce
     while True:
         # 00:00 ~ 01:00 不执行爬虫任务
         hours, minutes = strftime('%H:%M').split(':')
         if int(hours) < 1 and int(minutes) < 58:
             if int(minutes) in [4, 5]:        # 凌晨恢复当前爬取任务类型
                 init_()
+            SendBalanceOnce = False
             sleep(30)
             continue
+        if int(hours) == 18:
+            if 40 < int(minutes) < 45:
+                send_balance_to_server()
         # 记录任务执行时长(一小时一次)
         if int(time() - write_time) > 3600:
             timer()

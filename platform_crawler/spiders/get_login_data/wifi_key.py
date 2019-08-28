@@ -3,6 +3,7 @@ import logging
 from requests import get
 from platform_crawler.utils.utils import Util
 from platform_crawler.spiders.get_login_data.BaseModel import Base
+from platform_crawler.settings import BASEDIR, join
 
 logger = None
 u = Util()
@@ -20,34 +21,42 @@ class WifiKey(Base):
         logger = logging.getLogger(log_name)
         super().__init__(*args, **kwargs)
 
-    def get_verify_wifi(self, url=None, params=None, headers=None):
+    def get_verify_wifi(self, c):
+        url = 'http://ad.wkanx.com/user/captcha',
+        params = {'t': int(time.time())},
+        headers = {
+            'Host': 'ad.wkanx.com', 'Referer': 'http://ad.wkanx.com/',
+            'Cookie': 'laravel_session=%s' % c['value'],
+            'User-Agent': self.ua}
         img = get(url, params=params, headers=headers, timeout=60)
         verify_code = u.rc.rk_create(img.content, 3040)
-        return verify_code, img.cookies.get('laravel_session'), img.content
-
-    def deal_vc_res(self, c):
-        param_list = dict(
-            url='http://ad.wkanx.com/user/captcha',
-            params={'t': int(time.time())},
-            headers={
-                'Host': 'ad.wkanx.com', 'Referer': 'http://ad.wkanx.com/',
-                'Cookie': 'laravel_session=%s' % c['value'],
-                'User-Agent': self.ua
-            }
-        )
-        # 获取验证码图片
-        verfiy_code, cookie, im = self.get_verify_wifi(**param_list)
         self.d.delete_cookie('laravel_session')
-        c['value'] = cookie
+        c['value'] = img.cookies.get('laravel_session')
         c.pop('expiry')
         self.d.add_cookie(c)
-        self.d.find_element_by_name('verifyCode').send_keys(verfiy_code.get('Result').lower())
+        return verify_code, img.content
+
+    def get_verify_img(self):
+        captcha = self.d.find_element_by_css_selector('.captcha img')
+        imgpath = join(BASEDIR, 'imgs', 'wifi_imgs', 'verify.png')
+        u.cutimg_by_driver(self.d, captcha, imgpath)
+        with open(imgpath, 'br') as i:
+            img = i.read()
+        captcha_code = u.rc.rk_create(img, 3040)
+        return captcha_code, img
+
+    def deal_vc_res(self):
+        # 获取验证码图片
+        # verify_code, im = self.get_verify_wifi(cookie, **param_list)
+        verify_code, im = self.get_verify_img()
+        self.d.find_element_by_name('verifyCode').send_keys(verify_code.get('Result').lower())
+        time.sleep(1)
         self.d.find_element_by_xpath('//form[@name="form"]//button[@type="submit"]').click()
         self.d.implicitly_wait(5)
         try:
             res_text = self.d.find_element_by_css_selector('div.ng-binding').text
             if res_text == '验证码不正确':
-                u.rc.rk_report_error(verfiy_code.get('Id'))
+                u.rc.rk_report_error(verify_code.get('Id'))
                 return {'succ': False, 'msg': 'vc'}
             elif res_text == '用户名或密码不正确':
                 return {'succ': False, 'msg': 'pwd'}
@@ -59,7 +68,7 @@ class WifiKey(Base):
             self.d.find_element_by_id('ngdialog3-aria-labelledby')
             raise Exception('unkown error: sth covered in the page')
         except:
-            u.rc.rk_report(im, 3040, verfiy_code.get('Result').lower(), vc_type=self.user_info.get('platform'))
+            u.rc.rk_report(im, 3040, verify_code.get('Result').lower(), vc_type=self.user_info.get('platform'))
             return {'succ': True}
 
     def init_browser_and_page(self):
@@ -84,7 +93,7 @@ class WifiKey(Base):
             login_res['msg'] = 'account error'
             logger.info('account error')
             return login_res
-        try:        # 处理登陆后  账号的其他异常
+        try:  # 处理登陆后  账号的其他异常
             self.d.find_element_by_id('ngdialog2-aria-labelledby')
             logger.info('账号异常')
             self.close_chrome_debugger()
@@ -103,7 +112,7 @@ class WifiKey(Base):
         except:
             pass
         self.d.implicitly_wait(3)
-        try:    # 第一次get页面刷新失败
+        try:  # 第一次get页面刷新失败
             self.d.find_element_by_css_selector('.sems-login-form')
         except:
             refresh_times += 1
@@ -115,7 +124,7 @@ class WifiKey(Base):
             self.d.find_element_by_name('password').send_keys(self.pwd)
             c = self.d.get_cookie('laravel_session')
 
-            login_res = self.deal_vc_res(c)
+            login_res = self.deal_vc_res()
             if not login_res.get('succ') and login_res.get('msg') == 'vc':
                 self.d.refresh()
                 if vc_times >= 5:
@@ -130,7 +139,7 @@ class WifiKey(Base):
                 return self.login_(vc_times=vc_times, pwd_times=pwd_times)
             elif not login_res.get('succ'):
                 return {'succ': False}
-            try:        # 处理登陆后  账号的其他异常
+            try:  # 处理登陆后  账号的其他异常
                 self.d.find_element_by_id('ngdialog2-aria-labelledby')
                 logger.info('账号异常')
                 self.d.quit()

@@ -222,7 +222,7 @@ class JinRiTouTiaoSpider(TaskProcess):
         balance = {'账号': self.acc, '余额': data.get('valid_cash')}
         header = ['账号', '余额']
         logger.info(balance)
-        return header, [balance]
+        return header, data.get('valid_cash')
 
     def login_part(self, ui):
         return LoginTouTiao(ui).run_login()

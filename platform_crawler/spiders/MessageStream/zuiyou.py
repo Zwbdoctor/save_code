@@ -170,7 +170,8 @@ class ZuiYouSpider(TaskProcess):
 
     def parse_balance(self, *args, **kwargs):
         header = ['账号', '余额']
-        data = [{'账号': self.acc, '余额': self.balance_data}]
+        # data = [{'账号': self.acc, '余额': self.balance_data}]
+        data = self.balance_data
         return header, data
 
     def get_balance(self):

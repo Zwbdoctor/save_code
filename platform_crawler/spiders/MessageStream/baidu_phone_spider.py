@@ -54,10 +54,7 @@ class BaiduPhoneSpider(TaskProcess):
             return {'succ': False, 'msg': 'no data'}
         # 写入文件
         with open(file_name, 'w', encoding='utf-8') as f:
-            try:
-                f.write(data)
-            except Exception as e:
-                logger.error(e, exc_info=1)
+            f.write(data)
         logger.info('crawled data: --------%s' % data)
         return {'succ': True}
 
@@ -133,8 +130,8 @@ class BaiduPhoneSpider(TaskProcess):
         data = res.get('msg').get('data')
         balance = float(data.get('chunhua').get('balance'))
         headers = ['账号', '余额']
-        balance = [{'账号': self.acc, '余额': balance}]
-        logger.info(balance)
+        balance_data = [{'账号': self.acc, '余额': balance}]
+        logger.info(balance_data)
         return headers, balance
 
     def login_part(self, ui):

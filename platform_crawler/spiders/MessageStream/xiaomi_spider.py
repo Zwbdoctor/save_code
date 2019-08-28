@@ -277,20 +277,17 @@ class XiaoMiSpider(TaskProcess):
         if not res.get('succ') or not res.get('msg').get('success'):
             raise Exception(res.get('msg'))
         data = res.get('msg').get('result')
-        self.balance_data = {'cash': data.get('cash').get('balance'), 'totalBalance': data.get('totalBalance')}
+        # self.balance_data = {'cash': data.get('cash').get('balance'), 'totalBalance': data.get('totalBalance')}
+        self.balance_data = data.get('totalBalance')
 
     def parse_balance(self):
         accts = self.balance_data.get('list', [])
         if not accts:
             # 子账号
-            data = [{'账号': self.acc, '公司名': '', '现金余额': self.balance_data.get('cash'), '虚拟金余额': 0,
-                     '总计': self.balance_data.get('totalBalance')}]
+            data = self.balance_data.get('totalBalance')
         else:
-            data = [{'账号': self.acc,
-                     '公司名': acct.get('companyName'),
-                     '现金余额': acct.get('balance').get('cash'),
-                     '虚拟金余额': acct.get('balance').get('virtual'),
-                     '总计': acct.get('totalBalance')}
+            data = [{'acc': acct.get('companyName'),
+                     'balance': acct.get('totalBalance')}
                     for acct in accts]
         headers = ['账号', '公司名', '现金余额', '虚拟金余额', '总计']
         logger.info('balance data : \n%s' % data)
