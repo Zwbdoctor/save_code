@@ -180,7 +180,7 @@ def send_balance_to_server():
 def get_task():
     global task_type, TASK_CODE
     # 获取任务
-    data = {'platformType': GlobalVal.CUR_TASK_TYPE, 'flag': pc_name}
+    data = {'platformType': task_type, 'flag': pc_name}
     ret = post(get_task_url, data=json.dumps(data), headers={'Content-Type': 'application/json'}, timeout=60)
     if not ret['is_success']:
         # 请求失败
@@ -224,20 +224,21 @@ def task_filter(data):
     err_account = []
     pass_platform = ['MEIZUSTORE', 'HUAWEISTORE', 'OPPOSTORE', 'GDT']
     today = strftime('%d')
-    if int(today) == 3:
+    params = [data.get('id'), account, platform, '', 3]
+    if int(today) in [2, 3]:
         pass_platform.remove('GDT')
     if account in acc:      # 跳过指定账号
-        params = [data.get('id'), account, platform, '', 3]
+        params[3] = 3
         post_res(*params)
         sleep(2)
         return {'suc': False}
     if account in err_account:      # 确定错误的账号直接上报结果
-        params = [data.get('id'), account, platform, '', 4]
+        params[3] = 4
         post_res(*params)
         sleep(2)
         return {'suc': False}
     if platform in pass_platform:       # 跳过每月手动爬取的平台
-        params = [data.get('id'), account, platform, '', 3]
+        params[3] = 3
         post_res(*params)
         return {'suc': False}
     return {'suc': True, 'data': [platform, data]}
@@ -251,7 +252,7 @@ def loop_run():
         if int(hours) < 1 and int(minutes) < 58:
             if int(minutes) in [4, 5]:        # 凌晨恢复当前爬取任务类型
                 init_()
-            SendBalanceOnce = False
+                SendBalanceOnce = False
             sleep(30)
             continue
         if int(hours) == 18:

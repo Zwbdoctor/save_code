@@ -29,7 +29,7 @@ VERIFY_TIMES = 1
 
 def kill_qq(src=True):
     if src:
-        GlobalFunc.save_screen_shot(GlobalVal.err_src_name % time.time()*1000)
+        GlobalFunc.save_screen_shot(GlobalVal.err_src_name % int(time.time()*1000))
     for e in psutil.process_iter():
         a = e.name()
         if 'TIM' in a:
@@ -78,12 +78,9 @@ def handle_login_res(loginid):
         return True
     else:
         logger.info('Unknown situation with account: %s' % ACC)
-        GlobalFunc.save_screen_shot(GlobalVal.err_src_name % time.time()*1000)
+        GlobalFunc.save_screen_shot(GlobalVal.err_src_name % int(time.time()*1000))
         res = False
-    if not res:
-        pic_name = join(NEW_ERROR_PATH, 'error_%s.png' % (int(time.time())))
-        pag.screenshot(pic_name)
-        return res
+    return res
 
 
 def deal_vc(loginid):

@@ -1,7 +1,6 @@
 import os
 from pyautogui import screenshot
 
-
 join = os.path.join
 BASEDIR = os.path.dirname(__file__).replace('/', '\\')
 sd_path = join(BASEDIR, 'save_data')
@@ -22,7 +21,6 @@ DEFAULT_VERIFY_PATH = join(IMG_PATH, 'vc.png')
 
 
 class GlobalVal:
-
     __slots__ = ['err_src_name']
 
     # LOG
@@ -33,6 +31,29 @@ class GlobalVal:
 
     # destination directory
     DST_DIR = None
+
+    # platform dict
+    PLATFORM_DICT = {
+        'Alios': 1155,
+        'YYBHLCPD': 1140,
+        'YYBSYH': 1141,
+        'XIAOMISTORE': 1143,
+        'VIVOSTORE': 1144,
+        'MEIZUSTORE': 1145,
+        'HUAWEISTORE': 1147,
+        'WIFIKEY': 1150,
+        'BDSJZS': 1151,
+        'GDT': 1152,
+        'JRTT': 1154,
+        'BDXXL': 1158,
+        'QTT': 1159,
+        'OPPOSTORE': 1159,
+        'TA': 1266,
+        'KS': 1269,
+        'LH': 1153,
+        'SGQD': 1164,
+        'ZY': 1276
+    }
 
 
 class GlobalFunc:

@@ -57,7 +57,7 @@ def kill_chrome_fscapture(banks=False, explorer=False):
             for kl in kill_list:
                 if kl in e.name():
                     # e.kill()
-                    os.system(f'taskkill /PID {e.pid}')
+                    os.system(f'taskkill /PID {e.pid} /F')
                     return {'succ': True, 'msg': 'killed proc: %s' % e.name}
     except:
         return 'no chrome or FSCapture running, skip this step'

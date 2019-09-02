@@ -147,7 +147,7 @@ class TaskProcess(BaseCrawler):
         ...
 
     def get_account_balance(self):
-        self.logger.info('There is no data since last month!')
+        # self.logger.info('There is no data since last month!')
         res = self.get_balance()
         if isinstance(res, dict) and not res.get('succ'):
             raise Exception(res)
@@ -164,17 +164,20 @@ class TaskProcess(BaseCrawler):
         date = time.strftime('%Y-%m-%d')
         file_name = settings.join(settings.BAL_PATH, f'balance_data_{date}_{task_type}.json')
         try:
-            with open(file_name, 'r') as reader:
+            with open(file_name, 'r', encoding='utf-8') as reader:
                 data = json.load(reader)
         except:
             data = {}
         if not data.get(self.platform):
             data[self.platform] = []
+        channel_id = settings.GlobalVal.PLATFORM_DICT.get(self.platform)
         if isinstance(balance, list):
+            balance = [x.update({'channelId': channel_id}) for x in balance]
+            logger.info(f'Balance : {balance}')
             data.get(self.platform).extend(balance)
         else:
-            data.get(self.platform).append({'account': self.acc, 'balance': balance})
-        with open(file_name, 'w') as writer:
+            data.get(self.platform).append({'account': self.acc, 'balance': balance, 'channelId': channel_id})
+        with open(file_name, 'w', encoding='utf-8') as writer:
             json.dump(data, writer)
 
     def save_balance_to_xls(self, header: list, data: list):
